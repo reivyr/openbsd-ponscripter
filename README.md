@@ -9,6 +9,7 @@ Before you try this, please install the following packages on your system:
 - `sdl2-image`
 - `smpeg2`
 - `bzip2`
+- `gmake`
 
 First, you need to clone the wh-dev branch of the ponscripter-fork-wh repository from chronotrig
 

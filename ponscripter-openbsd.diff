@@ -1,0 +1,363 @@
+diff -x *.git -r -u ./configure ../ponscripter-modified/configure
+--- ./configure	Thu Mar  5 22:23:56 2020
++++ ../ponscripter-modified/configure	Sun Mar  8 15:09:47 2020
+@@ -343,8 +343,8 @@
+     esac
+ fi
+ 
+-# Compiler (gcc, g++, icpc)
+-if [ -z "$CC" ]; then CC=gcc; fi
++# Compiler (gcc, g++, icpc, clang)
++if [ -z "$CC" ]; then CC=clang; fi
+ if $UNSUPPORTED_COMPILER
+ then
+     echo "Unsupported compiler requested; please don't complain if anything doesn't work!"
+@@ -352,7 +352,7 @@
+     $echo_n "Checking C compiler... ${nobr}"
+     CC_TMP=`($CC --version) 2>/dev/null | head -1`
+     case "$CC_TMP" in
+-    gcc* | *apple*gcc* | *-*-gcc\ * | *-gcc??GCC*) CC_VER=`expr "x$CC_TMP" : 'x.* \(.*\)$'`; echo "gcc $CC_VER" ;;
++    gcc* | *apple*gcc* | *-*-gcc\ * | *-gcc??GCC* | *clang*) CC_VER=`expr "x$CC_TMP" : 'x.* \(.*\)$'`; echo "gcc $CC_VER" ;;
+     icc*) echo icc ;;
+     *)  echo "error"
+         cat <<-_ERR
+@@ -369,6 +369,7 @@
+ then case x$CC in
+ xgcc | x) CXX=g++ ;;
+ xicc) CXX=icpc ;;
++xclang) CXX=clang++ ;;
+ *) CXX=$CC ;;
+ esac
+ fi
+@@ -378,7 +379,7 @@
+ then
+     $echo_n "Checking C++ compiler... ${nobr}"
+     case "$CXX_TMP" in
+-    g++* | *apple*g++* | *-*-g++\ * | *-g++??GCC*) CXX_VER=`expr "x$CXX_TMP" : 'x.* \(.*\)$'`; echo "g++ $CXX_VER" ;;
++    g++* | *apple*g++* | *-*-g++\ * | *-g++??GCC* | *clang*) CXX_VER=`expr "x$CXX_TMP" : 'x.* \(.*\)$'`; echo "g++ $CXX_VER" ;;
+     icpc*) echo icpc ;;
+     *)  echo "error"
+         cat <<-_ERR
+@@ -643,6 +644,7 @@
+     1) echo "no MP3" ;; 2) echo "no Ogg" ;; 3) echo "no Ogg or MP3" ;;
+     *) echo "no" ;;
+     esac
++    INTERNAL_SDL_MIXER=false
+ fi
+ 
+ if $INTERNAL_SDL_MIXER && not $INTERNAL_OGGLIBS
+@@ -658,7 +660,7 @@
+ 	OggVorbis_File vf;f=fopen("o.ogg","rb");int n=ov_open(f,&vf,0,0)<0;fclose(f);return n;}
+ 	_EOF
+     INTERNAL_OGGLIBS=true
+-    $CXX -logg -lvorbis -lvorbisfile test.cc -o otest >/dev/null 2>&1
++    $CXX -I/usr/local/include -L/usr/local/lib -logg -lvorbis -lvorbisfile test.cc -o otest >/dev/null 2>&1
+     ./otest 2>/dev/null
+     case $? in
+     0) echo "yes"; INTERNAL_OGGLIBS=false ;;
+@@ -695,7 +697,7 @@
+ 	unsigned char bz[]={66,90,104,57,49,65,89,38,83,89,41,212,246,171,0,0,0,16,0,64,0,32,0,33,24,70,130,238,72,167,10,18,5,58,158,213,96};
+ 	int main(int argc, char**argv){char out[2];unsigned int olen=2;out[0]='.';return(BZ2_bzBuffToBuffDecompress(out,&olen,(char*)bz,37,0,0)==BZ_OK&&olen==1&&out[0]==' ')?0:1;}
+ 	_EOF
+-    $CXX -lbz2 test.cc -o btest >/dev/null 2>&1
++    $CXX -I/usr/local/include -L/usr/local/lib -lbz2 test.cc -o btest >/dev/null 2>&1
+     if ./btest 2>/dev/null
+     then echo "yes"
+     else echo "no"
+diff -x *.git -r -u ./src/PonscripterLabel.cpp ../ponscripter-modified/src/PonscripterLabel.cpp
+--- ./src/PonscripterLabel.cpp	Sun Mar  8 13:15:43 2020
++++ ../ponscripter-modified/src/PonscripterLabel.cpp	Fri Mar  6 02:17:20 2020
+@@ -49,7 +49,7 @@
+ #include <unistd.h>
+ #include <sys/stat.h>
+ #include <sys/types.h>
+-#include <linux/limits.h>
++// #include <linux/limits.h>
+ #include <pwd.h>
+ #endif
+ 
+@@ -441,10 +441,12 @@
+     minH = minH * 0.9;
+     int dispW = screen_width;
+     int dispH = screen_height;
+-    if (minH < screen_height) {
+-        dispW = (minH * screen_width) / screen_height;
+-        dispH = minH;
+-    }
++    /* 
++    * if (minH < screen_height) {
++    *    dispW = (minH * screen_width) / screen_height;
++    *    dispH = minH;
++    * }
++    */
+ 
+     screen = SDL_CreateWindow(wm_title_string,
+         SDL_WINDOWPOS_UNDEFINED,
+diff -x *.git -r -u ./src/PonscripterLabel_animation.cpp ../ponscripter-modified/src/PonscripterLabel_animation.cpp
+--- ./src/PonscripterLabel_animation.cpp	Sun Mar  8 13:15:43 2020
++++ ../ponscripter-modified/src/PonscripterLabel_animation.cpp	Sat Mar  7 02:46:01 2020
+@@ -274,7 +274,7 @@
+ 
+     anim->removeTag();
+ 
+-    int res_multiplier = 1;
++    int res_multiplier = 1 * resmodemul;
+     #ifdef USE_2X_MODE
+     res_multiplier = 2;
+     #endif
+diff -x *.git -r -u ./src/PonscripterLabel_command.cpp ../ponscripter-modified/src/PonscripterLabel_command.cpp
+--- ./src/PonscripterLabel_command.cpp	Sun Mar  8 13:15:43 2020
++++ ../ponscripter-modified/src/PonscripterLabel_command.cpp	Sat Mar  7 03:36:28 2020
+@@ -802,7 +802,7 @@
+ 
+ void PonscripterLabel::setwindowCore()
+ {
+-    int res_multiplier = 1;
++    int res_multiplier = 1 * resmodemul;
+     #ifdef USE_2X_MODE
+     res_multiplier = 2;
+     #endif
+@@ -1407,7 +1407,7 @@
+     int ret = leaveTextDisplayMode();
+     if (ret != RET_NOMATCH) return ret;
+ 
+-    int res_multiplier = 1;
++    int res_multiplier = 1 * resmodemul;
+     #ifdef USE_2X_MODE
+     res_multiplier = 2;
+     #endif
+@@ -1796,7 +1796,7 @@
+     int ret = leaveTextDisplayMode();
+     if (ret != RET_NOMATCH) return ret;
+ 
+-    int res_multiplier = 1;
++    int res_multiplier = 1 * resmodemul;
+     #ifdef USE_2X_MODE
+     res_multiplier = 2;
+     #endif
+@@ -2302,7 +2302,8 @@
+ {
+     int no = script_h.readIntValue();
+ 
+-    int res_multiplier = 1;
++    int res_multiplier = 1 * resmodemul;
++    res_multiplier = 1;
+     #ifdef USE_2X_MODE
+     res_multiplier = 2;
+     #endif
+@@ -2504,7 +2505,7 @@
+ 
+ int PonscripterLabel::getcursorposCommand(const pstring& cmd)
+ {
+-    int res_divider = 1;
++    int res_divider = 1 * resmodemul;
+     #ifdef USE_2X_MODE
+     res_divider = 2;
+     #endif
+@@ -2785,7 +2786,7 @@
+     int cell_no   = script_h.readIntValue();
+     int alpha     = script_h.readIntValue();
+ 
+-    int res_multiplier = 1;
++    int res_multiplier = 1 * resmodemul;
+     #ifdef USE_2X_MODE
+     res_multiplier = 2;
+     #endif
+@@ -2827,7 +2828,7 @@
+     int cell_no   = script_h.readIntValue();
+     int alpha     = script_h.readIntValue();
+ 
+-    int res_multiplier = 1;
++    int res_multiplier = 1 * resmodemul;
+     #ifdef USE_2X_MODE
+     res_multiplier = 2;
+     #endif
+@@ -2857,7 +2858,7 @@
+     int cell_no   = script_h.readIntValue();
+     int alpha     = script_h.readIntValue();
+ 
+-    int res_multiplier = 1;
++    int res_multiplier = 1 * resmodemul;
+     #ifdef USE_2X_MODE
+     res_multiplier = 2;
+     #endif
+@@ -3415,7 +3416,7 @@
+     int sx, sy, sw, sh;
+     int multiplier = 2;
+ 
+-    int res_multiplier = 1;
++    int res_multiplier = 1 * resmodemul;
+     #ifdef USE_2X_MODE
+     res_multiplier = 2;
+     #endif
+@@ -3511,7 +3512,7 @@
+     int interval, dist, count, multiplier = 2, timecounter = 0, amountcounter = 0;
+     unsigned int lasttime, nexttime, starttime;
+ 
+-    int res_multiplier = 1;
++    int res_multiplier = 1 * resmodemul;
+     #ifdef USE_2X_MODE
+     res_multiplier = 2;
+     #endif
+diff -x *.git -r -u ./src/PonscripterLabel_image.cpp ../ponscripter-modified/src/PonscripterLabel_image.cpp
+--- ./src/PonscripterLabel_image.cpp	Sun Mar  8 13:15:43 2020
++++ ../ponscripter-modified/src/PonscripterLabel_image.cpp	Sat Mar  7 02:44:03 2020
+@@ -151,17 +151,20 @@
+         ret = retf;
+     }
+ 
+-    #ifdef USE_2X_MODE
+-    int multiplier = twox ? 1 : 2;
+-    SDL_Surface *retb = SDL_CreateRGBSurface(0, ret->w * multiplier, ret->h * multiplier, BPP, RMASK, GMASK, BMASK, AMASK);
+-    SDL_BlitScaled(ret, NULL, retb, NULL);
++    // #ifdef USE_2X_MODE
++    if (resmodemul == 2) {
++    	int multiplier = twox ? 1 : 2;
++    	SDL_Surface *retb = SDL_CreateRGBSurface(0, ret->w * multiplier, ret->h * multiplier, BPP, RMASK, GMASK, BMASK, AMASK);
++    	SDL_BlitScaled(ret, NULL, retb, NULL);
+ 
+-    SDL_FreeSurface( ret );
+-    return retb;
+-    #else
+-    return ret;
+-    #endif
+-    
++    	SDL_FreeSurface( ret );
++    	return retb;
++    }
++    // #else
++    else {
++    	return ret;
++    // #endif
++    } 
+ }
+ 
+ SDL_Surface *PonscripterLabel::createRectangleSurface(const pstring& filename)
+diff -x *.git -r -u ./src/PonscripterLabel_sound.cpp ../ponscripter-modified/src/PonscripterLabel_sound.cpp
+--- ./src/PonscripterLabel_sound.cpp	Sun Mar  8 13:15:43 2020
++++ ../ponscripter-modified/src/PonscripterLabel_sound.cpp	Sat Mar  7 02:25:38 2020
+@@ -529,7 +529,7 @@
+ #ifndef MP3_MAD
+     bool different_spec = false;
+     pstring mpeg_dat = ScriptHandler::cBR->getFile(filename);
+-    SMPEG* mpeg_sample = SMPEG_new_rwops(rwops(mpeg_dat), 0, 0, 0);
++    SMPEG* mpeg_sample = SMPEG_new_rwops(rwops(mpeg_dat), 0, 0, 1);
+     if (!SMPEG_error(mpeg_sample)) {
+         SMPEG_enableaudio(mpeg_sample, 0);
+ 
+@@ -580,7 +580,7 @@
+ 
+         if (!nosound_flag) {
+             SMPEG_setvolume(mpeg_sample, !volume_on_flag? 0 : music_volume);
+-            Mix_HookMusic(mp3callback, mpeg_sample);
++            // Mix_HookMusic(mp3callback, mpeg_sample);
+         }
+ 
+         if (loop_flag) {
+@@ -706,7 +706,7 @@
+               SDL_Rect r;
+               r.x = 0; r.y = 0; r.w = c.frame->image_width; r.h = c.frame->image_height;
+               SDL_UpdateTexture(video_texture, &r, c.frame->image, c.frame->image_width);
+-#ifdef USE_2X_MODE
++// #ifdef USE_2X_MODE
+               //Mion: so 2X Umineko will play its video correctly
+               // (note: when adding proper "movie" cmd support, will probably
+               // use some specialized variation of the video_texture
+@@ -717,10 +717,14 @@
+               // chronotrig again: now this is causing trouble for windows only
+               // Removing the old change to see if it fixes anything
+               r2.x = -2; r2.y = -2; r2.w = r.w * 2 + 4; r2.h = r.h * 2 + 4;
+-              SDL_RenderCopy(renderer, video_texture, &r, &r2);
+-#else
+-              SDL_RenderCopy(renderer, video_texture, &r, &r);
+-#endif
++	      if (resmodemul == 2) {
++              	SDL_RenderCopy(renderer, video_texture, &r, &r2);
++	      }
++// #else
++	      else {
++              	SDL_RenderCopy(renderer, video_texture, &r, &r);
++	      }
++// #endif
+ 
+               if(subtitles) {
+                 /* render any subs onto the screen */
+diff -x *.git -r -u ./src/ScriptHandler.cpp ../ponscripter-modified/src/ScriptHandler.cpp
+--- ./src/ScriptHandler.cpp	Sun Mar  8 13:15:43 2020
++++ ../ponscripter-modified/src/ScriptHandler.cpp	Fri Mar  6 05:12:15 2020
+@@ -991,6 +991,7 @@
+     /* ---------------------------------------- */
+     /* screen size and value check */
+     const char* buf = script_buffer+1;
++    oldvalueres = 1;
+     while (script_buffer[0] == ';') {
+         if (!strncmp(buf, "mode", 4)) {
+             buf += 4;
+@@ -1029,6 +1030,10 @@
+                 buf++;
+             if (*buf != '\n') buf += 3;
+         }
++        else if (!strncmp(buf, "oldmode2x", 9)) {
++	    oldvalueres = 2;
++	    buf += 9;
++	}
+         else {
+             break;
+         }
+diff -x *.git -r -u ./src/ScriptHandler.h ../ponscripter-modified/src/ScriptHandler.h
+--- ./src/ScriptHandler.h	Sun Mar  8 13:15:43 2020
++++ ../ponscripter-modified/src/ScriptHandler.h	Fri Mar  6 05:11:50 2020
+@@ -280,6 +280,7 @@
+     VariableInfo current_variable;
+ 
+     int screen_size;
++    int oldvalueres;
+     enum { SCREEN_SIZE_640x480 = 0,
+            SCREEN_SIZE_800x600 = 1,
+            SCREEN_SIZE_400x300 = 2,
+diff -x *.git -r -u ./src/ScriptParser.cpp ../ponscripter-modified/src/ScriptParser.cpp
+--- ./src/ScriptParser.cpp	Sun Mar  8 13:15:43 2020
++++ ../ponscripter-modified/src/ScriptParser.cpp	Sat Mar  7 01:34:33 2020
+@@ -371,8 +371,8 @@
+         script_width  = 640;
+         script_height = 360;
+ #else
+-        script_width  = 1280;
+-        script_height = 720;
++        script_width  = 1280/script_h.oldvalueres;
++        script_height = 720/script_h.oldvalueres;
+ #endif
+         break;
+     case ScriptHandler::SCREEN_SIZE_w1080:
+@@ -383,8 +383,8 @@
+         script_width  = 960;
+         script_height = 540;
+ #else
+-        script_width  = 1920;
+-        script_height = 1080;
++        script_width  = 1920/script_h.oldvalueres;
++        script_height = 1080/script_h.oldvalueres;
+ #endif
+         break;
+     case ScriptHandler::SCREEN_SIZE_640x480:
+@@ -403,6 +403,9 @@
+ 
+     screen_width  = script_width * screen_ratio1 / screen_ratio2;
+     screen_height = script_height * screen_ratio1 / screen_ratio2;
++    resmodemul	= script_h.oldvalueres;
++    screen_width	*= resmodemul;
++    screen_height	*= resmodemul;
+     
+ #ifdef USE_2X_MODE
+     screen_width  *= 2;
+diff -x *.git -r -u ./src/ScriptParser.h ../ponscripter-modified/src/ScriptParser.h
+--- ./src/ScriptParser.h	Sun Mar  8 13:15:43 2020
++++ ../ponscripter-modified/src/ScriptParser.h	Fri Mar  6 05:17:15 2020
+@@ -292,6 +292,7 @@
+     uint16_t    screen_width, screen_height;
+     int    screen_texture_width, screen_texture_height;
+     int    screen_bpp;
++    int    resmodemul;
+     pstring version_str;
+     int    underline_value;
+     int humanpos[3]; // l,c,r

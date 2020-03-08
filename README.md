@@ -2,8 +2,15 @@
 
 Patch to run Ponscripter in OpenBSD -current.
 
+Before you try this, please install the following packages on your system:
 
-First you need to clone the wh-dev branch of the ponscripter-fork-wh repository from chronotrig
+- `sdl2`
+- `sdl2-mixer`
+- `sdl2-image`
+- `smpeg2`
+- `bzip2`
+
+First, you need to clone the wh-dev branch of the ponscripter-fork-wh repository from chronotrig
 
 
 `git clone https://github.com/chronotrig/ponscripter-fork-wh -b wh-dev --single-branch`

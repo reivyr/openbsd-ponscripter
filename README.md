@@ -2,42 +2,16 @@
 
 Patch to run Ponscripter in OpenBSD -current.
 
-Before you try this, please install the following packages on your system:
-
-- `sdl2`
-- `sdl2-mixer`
-- `sdl2-image`
-- `smpeg2`
-- `bzip2`
-- `gmake`
-
-First, you need to clone the wh-dev branch of the ponscripter-fork-wh repository from chronotrig
+Download the script `ponscripter-openbsd.sh`. Please read the content before execute it in your machine.
 
 
-`git clone https://github.com/chronotrig/ponscripter-fork-wh -b wh-dev --single-branch`
-
-Then, go to the directory, download the file  `ponscripter-openbsd.diff` and use patch(1)
+`ftp https://raw.githubusercontent.com/reivyr/openbsd-ponscripter/master/ponscripter-openbsd.sh`
 
 
-`cd ponscripter-fork-wh`
+`sh ponscripter-openbsd.sh`
 
 
-`ftp https://raw.githubusercontent.com/reivyr/openbsd-ponscripter/master/ponscripter-openbsd.diff`
-
-
-`patch -p0 < ponscripter-openbsd.diff`
-
-
-Compile the project with:
-
-
-`./configure`
-
-
-`gmake`
-
-
-You can use the binary ponscr located in the `src` directory
+**You can use the binary `ponscr` located in the `src` directory of `ponscripter-fork-wh`**
 
 
 ## Playing games
@@ -51,7 +25,7 @@ Also, you can try the demo for Ciconia When They Cry from the website of Witch-H
 After you download and unzip (only for GOG) the game, you can try it with:
 
 
-`src/ponscr -r /path-to-the-game-directory`
+`./ponscr -r /path-to-the-game-directory`
 
 
 For GOG games its in `data/noarch/game`, ponscr wants the directory that contains `0.utf` or `pscript.dat`
@@ -70,7 +44,7 @@ You can use the PS3 voice and graphics patch! **I installed them manually** usin
 After that you can play it normally with
 
 
-`src/ponscr -r /path-to-the-game-directory`
+`./ponscr -r /path-to-the-game-directory`
 
 
 ## Additional notes

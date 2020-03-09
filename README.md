@@ -45,7 +45,7 @@ You can use the binary ponscr located in the `src` directory
 Currently, you can play Ciconia When They Cry (from steam, I downloaded the Windows version using depotdownloader on OpenBSD), Umineko When They Cry (question and answer arcs, I tested the GOG version), and Narcissu 1st & 2nd (it's free on Steam, use depotdownloader).
 
 
-Also, if you want to try the demo for Ciconia When They Cry from the website of Witch-Hunt (https://witch-hunt.com/stage_cic.html)
+Also, if you can try the demo for Ciconia When They Cry from the website of Witch-Hunt (https://witch-hunt.com/stage_cic.html)
 
 
 After you download and unzip (only for GOG) the game, you can try it with:
